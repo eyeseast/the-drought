@@ -6,6 +6,8 @@ import urllib
 
 from fabric.api import *
 
+from app import db, Report
+
 DATE_FORMAT = "usdm%y%m%d"
 DROUGHT_URL = "http://droughtmonitor.unl.edu/shapefiles_combined/%(year)s/usdm%(year)s.zip"
 
@@ -24,6 +26,9 @@ env.repos = {
     'years': ['master', 'master:gh-pages']
 }
 
+########################
+# Project-level controls
+########################
 
 def deploy():
     for remote, branches in env.repos.items():
@@ -44,6 +49,9 @@ def freeze():
 
     print reqs
 
+##############
+# Maps and GIS
+##############
 
 def raster():
     """
@@ -154,4 +162,40 @@ def weeksjs():
     with open(outfile, 'wb') as f:
         f.write(js)
 
+#################
+# App controls
+#################
+
+def create_tables(fail_silently=True):
+    """
+    Create tables needed to store drought data
+    """
+    db.connect_db()
+    Report.create_table(fail_silently=bool(fail_silently))
+
+
+def drop_tables(fail_silently=False):
+    """
+    Drop tables. Be careful here.
+    """
+    db.connect_db()
+    Report.drop_table(fail_silently=bool(fail_silently))
+
+
+def load_us():
+    """
+    Load US-level drought data
+    """
+
+
+def load_state(state):
+    """
+    Load state-level drought data for a given state
+    """
+
+
+def load_all():
+    """
+    Load all US and state-level data.
+    """
 
