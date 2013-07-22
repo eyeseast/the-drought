@@ -6,7 +6,7 @@ import urllib
 
 from fabric.api import *
 
-from app import db, Report
+from app import app, db, Report
 
 DATE_FORMAT = "usdm%y%m%d"
 DROUGHT_URL = "http://droughtmonitor.unl.edu/shapefiles_combined/%(year)s/usdm%(year)s.zip"
@@ -198,4 +198,11 @@ def load_all():
     """
     Load all US and state-level data.
     """
+
+
+def devserver():
+    """
+    Run the Flask development server.
+    """
+    app.run(debug=True)
 

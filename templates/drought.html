@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>The Drought</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <link href="{{ static('components/bootstrap/css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ static('components/bootstrap/css/bootstrap-responsive.css') }}" rel="stylesheet" type="text/css">
+
+    <link href="{{ static('components/jquery-ui/themes/ui-lightness/jquery-ui.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ static('css/drought.css') }}" rel="stylesheet" type="text/css">
+
+    <style type="text/css">
+    #chart {
+    	height: 200px;
+    	width: 100%;
+    }
+    </style>
+</head>
+<body>
+	<div class="container">
+
+		<div class="row">
+			<div id="map" class="span12">
+			    <img src="static/img/drought/usdm130702.png">
+			</div>
+		</div>
+
+		<div class="row">
+			<div id="chart" class="span12"></div>
+		</div>
+
+		<div class="row">
+			<div id="slider" class="span12"></div>
+		</div>
+		<div class="row">
+			<div class="caption national span12"></div>
+		</div>
+
+	</div>
+    
+    <script type="x-jst" id="caption-template">
+    <h4>Week: <%= formats.date(Week) %></h4>
+    <ul class="inline drought-levels">
+        <li>No drought: <%= formats.percent(Nothing) %></li>
+        <li><span class="D0"></span>Abnormally Dry: <%= formats.percent(D0) %></li>
+        <li><span class="D1"></span>Moderate: <%= formats.percent(D1) %></li>
+        <li><span class="D2"></span>Severe: <%= formats.percent(D2) %></li>
+        <li><span class="D3"></span>Extreme: <%= formats.percent(D3) %></li>
+        <li><span class="D4"></span>Exceptional: <%= formats.percent(D4) %></li>
+    </ul>
+    </script>
+
+    <script src="{{ static('components/underscore/underscore.js') }}"></script>
+    <script src="{{ static('components/jquery/jquery.js') }}"></script>
+    <script src="{{ static('components/jquery-ui/ui/jquery-ui.js') }}"></script>
+    <script src="{{ static('components/d3/d3.js') }}" charset="utf-8"></script>
+    <script src="{{ static('components/crossfilter/crossfilter.js') }}"></script>
+    <script src="{{ static('js/weeks.js') }}"></script>
+    <script src="{{ static('js/chart.js') }}"></script>
+
+    <script type="text/javascript">
+    var IMG_PATH = "{{ g.IMG_PATH }}";
+
+    var weeks = _.map(WEEKS, function(w, i) {
+    	var img = document.createElement('img');
+    	img.setAttribute('src', IMG_PATH + w + '.png');
+    	return img;
+    });
+
+    var map = $('#map');
+
+    var slider = $('#slider').slider({
+    	// settings
+    	max: WEEKS.length,
+
+    	// events
+    	slide: function(event, ui) {
+    		var image = weeks[ui.value];
+    		map.html(image);
+    	}
+    });
+    </script>
+
+</body>
+</html>
