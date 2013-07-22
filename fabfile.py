@@ -5,10 +5,13 @@ import os
 import urllib
 
 from fabric.api import *
+from lxml import etree
 
 from app import app, db, Report
 
 DATE_FORMAT = "usdm%y%m%d"
+SHORT_DATE_FORMAT = "%y%m%d"
+
 DROUGHT_URL = "http://droughtmonitor.unl.edu/shapefiles_combined/%(year)s/usdm%(year)s.zip"
 
 ROOT = os.path.realpath(os.path.dirname(__file__))
@@ -184,8 +187,53 @@ def drop_tables(fail_silently=False):
 
 def load_us():
     """
-    Load US-level drought data
+    Load US-level drought data from Drought Monitor's XML.
+
+    <week name="total" date="130716">
+        <Nothing>46.45</Nothing>
+        <D0>53.55</D0>
+        <D1>41.02</D1>
+        <D2>28.66</D2>
+        <D3>11.15</D3>
+        <D4>3.63</D4>
+    </week>
+
     """
+    # make sure we're connected
+    db.connect_db()
+
+    # always US for this set
+    locale = "US"
+
+    # grab xml from the drought monitor
+    url = "http://droughtmonitor.unl.edu/tabular/total_archive.xml"
+    root = etree.parse(url).getroot()
+
+    # and load!
+    for week in root.findall('week'):
+        
+        # get a date
+        date = datetime.datetime.strptime(
+            week.get('date'), SHORT_DATE_FORMAT).date()
+
+        # get or update a Report object
+        try:
+            report = Report.get(Report.date == date, Report.locale == locale)
+        except Report.DoesNotExist:
+            report = Report(date=date, locale=locale)
+
+        # update data
+        report.nothing = week.find('Nothing').text
+        report.d0 = week.find('D0').text
+        report.d1 = week.find('D1').text
+        report.d2 = week.find('D2').text
+        report.d3 = week.find('D3').text
+        report.d4 = week.find('D4').text
+
+        # save and we're done
+        report.save()
+
+        print "Updated: %s" % unicode(report)
 
 
 def load_state(state):

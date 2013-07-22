@@ -49,6 +49,20 @@ class Report(db.Model):
 	def __unicode__(self):
 		return u'%s: %s' % (self.locale, self.date.strftime(DATE_FORMAT))
 
+	def serialize(self):
+		"""
+		Get this object as a Python dictionary, ready to be JSON dumped.
+		"""
+		data = {
+		    'date': str(self.date),
+		    'locale': self.locale
+		}
+
+		for field in ('nothing', 'd0', 'd1', 'd2', 'd3', 'd4'):
+			data[field] = float(getattr(self, field))
+
+		return data
+
 
 # views
 @app.route('/')
