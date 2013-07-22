@@ -10,7 +10,7 @@ var Canvas = require('canvas')
   , topojson = require('topojson');
 
 var DATA_DIR = path.resolve(__dirname, '..', 'data')
-  , IMG_DIR = path.resolve(__dirname, '..', 'img/drought');
+  , IMG_DIR = path.resolve(__dirname, '..', 'static/img/drought');
 
 var argv = require('optimist')
     .default({ 
