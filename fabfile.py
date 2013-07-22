@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import glob
 import json
 import os
@@ -28,6 +29,15 @@ env.repos = {
     'origin': ['master', 'master:gh-pages'],
     'years': ['master', 'master:gh-pages']
 }
+
+env.states = ["AL", "AK", "AZ", "AR", "CA", "CO", "CT", 
+              "DE", "DC", "FL", "GA", "HI", "ID", "IL", 
+              "IN", "IA", "KS", "KY", "LA", "ME", "MD", 
+              "MA", "MI", "MN", "MS", "MO", "MT", "NE", 
+              "NV", "NH", "NJ", "NM", "NY", "NC", "ND", 
+              "OH", "OK", "OR", "PA", "PR", "RI", "SC", 
+              "SD", "TN", "TX", "UT", "VT", "VA", "WA", 
+              "WV", "WI", "WY"]
 
 ########################
 # Project-level controls
@@ -185,9 +195,17 @@ def drop_tables(fail_silently=False):
     Report.drop_table(fail_silently=bool(fail_silently))
 
 
-def load_us():
+def reset_db():
     """
-    Load US-level drought data from Drought Monitor's XML.
+    Drop and recreate tables.
+    """
+    drop_tables()
+    create_tables()
+
+
+def load_data(locale='US'):
+    """
+    Load US-level or state-level drought data from Drought Monitor's XML.
 
     <week name="total" date="130716">
         <Nothing>46.45</Nothing>
@@ -202,11 +220,14 @@ def load_us():
     # make sure we're connected
     db.connect_db()
 
-    # always US for this set
-    locale = "US"
+    if locale == "US":
+        url = "http://droughtmonitor.unl.edu/tabular/total_archive.xml"
+
+    else:
+        locale = locale.upper()
+        url = "http://droughtmonitor.unl.edu/tabular/%s.xml" % locale
 
     # grab xml from the drought monitor
-    url = "http://droughtmonitor.unl.edu/tabular/total_archive.xml"
     root = etree.parse(url).getroot()
 
     # and load!
@@ -223,12 +244,27 @@ def load_us():
             report = Report(date=date, locale=locale)
 
         # update data
-        report.nothing = week.find('Nothing').text
-        report.d0 = week.find('D0').text
-        report.d1 = week.find('D1').text
-        report.d2 = week.find('D2').text
-        report.d3 = week.find('D3').text
-        report.d4 = week.find('D4').text
+        nothing = week.find('Nothing').text
+        D0 = decimal.Decimal(week.find('D0').text)
+        D1 = decimal.Decimal(week.find('D1').text)
+        D2 = decimal.Decimal(week.find('D2').text)
+        D3 = decimal.Decimal(week.find('D3').text)
+        D4 = decimal.Decimal(week.find('D4').text)
+
+        # remove the combined areas
+        report.D0 = D0 - D1
+        report.D1 = D1 - D2
+        report.D2 = D2 - D3
+        report.D3 = D3 - D4
+        report.D4 = D4
+
+        # store the overlapping (as reported) data
+        report.D0_D4 = D0
+        report.D1_D4 = D1
+        report.D2_D4 = D2
+        report.D3_D4 = D3
+
+        report.nothing = nothing
 
         # save and we're done
         report.save()
@@ -236,16 +272,14 @@ def load_us():
         print "Updated: %s" % unicode(report)
 
 
-def load_state(state):
-    """
-    Load state-level drought data for a given state
-    """
-
-
 def load_all():
     """
     Load all US and state-level data.
     """
+    load_data('US')
+    
+    for state in env.states:
+        load_data(state)
 
 
 def devserver():

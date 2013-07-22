@@ -40,11 +40,19 @@ class Report(db.Model):
 
 	# drought levels
 	nothing = DecimalField()
-	d0 = DecimalField()
-	d1 = DecimalField()
-	d2 = DecimalField()
-	d3 = DecimalField()
-	d4 = DecimalField()
+
+	# isolated coverage
+	D0 = DecimalField()
+	D1 = DecimalField()
+	D2 = DecimalField()
+	D3 = DecimalField()
+	D4 = DecimalField()
+
+	# overlapping coverage
+	D0_D4 = DecimalField()
+	D1_D4 = DecimalField()
+	D2_D4 = DecimalField()
+	D3_D4 = DecimalField()
 
 	def __unicode__(self):
 		return u'%s: %s' % (self.locale, self.date.strftime(DATE_FORMAT))
@@ -53,12 +61,13 @@ class Report(db.Model):
 		"""
 		Get this object as a Python dictionary, ready to be JSON dumped.
 		"""
+		fields = ('nothing', 'D0', 'D1', 'D2', 'D3', 'D4')
 		data = {
 		    'date': str(self.date),
 		    'locale': self.locale
 		}
 
-		for field in ('nothing', 'd0', 'd1', 'd2', 'd3', 'd4'):
+		for field in fields:
 			data[field] = float(getattr(self, field))
 
 		return data
