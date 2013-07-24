@@ -100,9 +100,20 @@ function showCaption() {
         d3.select('.caption.national').html(template(datum));
 
         // update the map
+        /***
         var map = d3.select('#map');
         map.select('img').remove();
         map.node().appendChild(datum.image);
+        ***/
+        var images = d3.select('.image-holder').selectAll('image')
+          , map = d3.select('#map')
+          , current = images.filter(function(d) { return d.Week === datum.Week; });
+
+        map.select('image').remove();
+        map.node().appendChild(current.node());
+
+        window.datum = datum;
+        window.current = current;
     }
 }
 
@@ -151,9 +162,10 @@ d3.csv(url).row(function(d) {
     d['D2'] = d['D2-D4'] - d['D3-D4'];
     d['D3'] = d['D3-D4'] - d['D4'];
 
+    /***
     d.image = document.createElement('img');
     d.image.src = IMG_PATH + formats.file(d.Week) + '.png';
-
+    ***/
     return d;
 
 }).get(function(err, data) {
@@ -179,4 +191,16 @@ d3.csv(url).row(function(d) {
 
     svg.select('g.x.axis').call(xAxis);
     svg.select('g.y.axis').call(yAxis);
+
+    // build images
+    var images = d3.select('body').append('svg')
+        .attr('class', 'image-holder')
+        .style('display', 'none')
+      .selectAll('image')
+        .data(data)
+      .enter().append('image')
+        .attr('xlink:href', function(d) { return IMG_PATH + formats.file(d.Week) + '.png'; })
+        .attr('width', 770)
+        .attr('height', 450);
+
 });
